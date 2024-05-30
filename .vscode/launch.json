@@ -7,15 +7,15 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug executable 'rust_ffserver'",
+      "name": "Debug executable 'iolite'",
       "cargo": {
         "args": [
           "build",
-          "--bin=rust_ffserver",
-          "--package=rust_ffserver"
+          "--bin=iolite",
+          "--package=iolite"
         ],
         "filter": {
-          "name": "rust_ffserver",
+          "name": "iolite",
           "kind": "bin"
         }
       },
@@ -25,16 +25,16 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug unit tests in executable 'rust_ffserver'",
+      "name": "Debug unit tests in executable 'iolite'",
       "cargo": {
         "args": [
           "test",
           "--no-run",
-          "--bin=rust_ffserver",
-          "--package=rust_ffserver"
+          "--bin=iolite",
+          "--package=iolite"
         ],
         "filter": {
-          "name": "rust_ffserver",
+          "name": "iolite",
           "kind": "bin"
         }
       },
