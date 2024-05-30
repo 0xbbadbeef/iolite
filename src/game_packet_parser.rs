@@ -6,7 +6,7 @@ use crate::structs::common::{
   CompressionType, FFXIVARRPacketHeader, FFXIVARRPacketSegmentRaw, FFXIVARRSegmentHeader,
 };
 
-fn get_segment_header(buffer: &Vec<u8>, offset: usize) -> Option<FFXIVARRSegmentHeader> {
+fn get_segment_header(buffer: &[u8], offset: usize) -> Option<FFXIVARRSegmentHeader> {
   let header_size = mem::size_of::<FFXIVARRSegmentHeader>();
   let remaining_bytes = buffer.len() - offset;
   if remaining_bytes < header_size {
@@ -18,8 +18,8 @@ fn get_segment_header(buffer: &Vec<u8>, offset: usize) -> Option<FFXIVARRSegment
   Some(seg_hdr)
 }
 
-fn get_packet(buffer: &Vec<u8>, offset: usize) -> Option<FFXIVARRPacketSegmentRaw> {
-  let segment_header = get_segment_header(&buffer, offset).unwrap();
+fn get_packet(buffer: &[u8], offset: usize) -> Option<FFXIVARRPacketSegmentRaw> {
+  let segment_header = get_segment_header(buffer, offset).unwrap();
 
   if segment_header.size > 256 * 1024 {
     eprintln!("segment header size too large!");
@@ -33,11 +33,11 @@ fn get_packet(buffer: &Vec<u8>, offset: usize) -> Option<FFXIVARRPacketSegmentRa
     data: buffer[data_offset..].to_vec(),
   };
 
-  return Some(raw_packet);
+  Some(raw_packet)
 }
 
 pub fn process_packets(
-  buffer: &Vec<u8>,
+  buffer: &[u8],
   header: FFXIVARRPacketHeader,
   offset: usize,
 ) -> Vec<FFXIVARRPacketSegmentRaw> {
@@ -52,12 +52,12 @@ pub fn process_packets(
   let mut packets = Vec::<FFXIVARRPacketSegmentRaw>::new();
   let mut count = 0;
   while count < header.count {
-    let packet = get_packet(&buffer, offset + bytes_processed).unwrap();
+    let packet = get_packet(buffer, offset + bytes_processed).unwrap();
 
     bytes_processed += usize::try_from(packet.seg_hdr.size).unwrap();
     packets.push(packet);
     count += 1;
   }
 
-  return packets;
+  packets
 }

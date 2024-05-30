@@ -33,8 +33,8 @@ struct LobbyResponse {
 }
 
 fn create_lobby_packet_segments(
-  encryption_key: &Vec<u8>,
-  lobby_responses: &Vec<LobbyResponse>,
+  encryption_key: &[u8],
+  lobby_responses: &[LobbyResponse],
 ) -> Vec<Vec<u8>> {
   lobby_responses
     .iter()
@@ -65,13 +65,13 @@ fn create_lobby_packet_segments(
         data: lobby_response_encoded,
       };
 
-      return response_segment.to_bytes().unwrap();
+      response_segment.to_bytes().unwrap()
     })
     .collect()
 }
 
 fn get_ipc_header(ipc_type: ServerLobbyIpcType) -> FFXIVIpcHeader {
-  return FFXIVIpcHeader {
+  FFXIVIpcHeader {
     timestamp: SystemTime::now()
       .duration_since(UNIX_EPOCH)
       .expect("Time went backwards")
@@ -80,7 +80,7 @@ fn get_ipc_header(ipc_type: ServerLobbyIpcType) -> FFXIVIpcHeader {
       .unwrap(),
     ipc_type: ipc_type.try_into().unwrap(),
     ..Default::default()
-  };
+  }
 }
 
 fn get_service_account_list(packet_segment: FFXIVARRPacketSegmentRaw) -> LobbyResponse {
@@ -118,10 +118,10 @@ fn get_service_account_list(packet_segment: FFXIVARRPacketSegmentRaw) -> LobbyRe
     );
   }
 
-  return LobbyResponse {
+  LobbyResponse {
     ipc_header,
     segment: appended_service_accounts,
-  };
+  }
 }
 
 fn get_server_list() -> LobbyResponse {
@@ -159,10 +159,10 @@ fn get_server_list() -> LobbyResponse {
     )
   }
 
-  return LobbyResponse {
+  LobbyResponse {
     ipc_header,
     segment: server_list,
-  };
+  }
 }
 
 fn get_retainers() -> LobbyResponse {
@@ -174,10 +174,10 @@ fn get_retainers() -> LobbyResponse {
     padding: empty_padding,
   };
 
-  return LobbyResponse {
+  LobbyResponse {
     ipc_header,
     segment: get_retainers.to_bytes().unwrap(),
-  };
+  }
 }
 
 const SIZED_UNKNOWN1: [u8; 16] = [0u8; 16];
@@ -206,7 +206,7 @@ fn get_empty_char() -> Vec<u8> {
 async fn get_char_list(
   socket: &mut TcpStream,
   packet_segment: FFXIVARRPacketSegmentRaw,
-  encryption_key: &Vec<u8>,
+  encryption_key: &[u8],
 ) {
   let sequence = u64::from_ne_bytes(packet_segment.data[0x10..0x10 + 8].try_into().unwrap());
 
@@ -267,7 +267,7 @@ async fn get_char_list(
 
     let segments = create_lobby_packet_segments(
       encryption_key,
-      &vec![LobbyResponse {
+      &[LobbyResponse {
         ipc_header,
         segment: char_list_bytes,
       }],
@@ -279,7 +279,7 @@ async fn get_char_list(
 
 pub async fn handle_lobby_packet(
   socket: &mut TcpStream,
-  encryption_key: &Vec<u8>,
+  encryption_key: &[u8],
   packet_segment: FFXIVARRPacketSegmentRaw,
 ) {
   let op_code = u16::from(packet_segment.data[2]);
@@ -289,11 +289,9 @@ pub async fn handle_lobby_packet(
     ClientLobbyIpcType::ClientVersionInfo => {
       let segments = create_lobby_packet_segments(
         encryption_key,
-        &vec![get_service_account_list(packet_segment)],
+        &[get_service_account_list(packet_segment)],
       );
       send_ipc_packet(socket, segments).await;
-
-      return;
     }
     ClientLobbyIpcType::ReqCharList => {
       let mut segment_buffer = vec![];
@@ -304,13 +302,9 @@ pub async fn handle_lobby_packet(
       segment_buffer.clear();
 
       get_char_list(socket, packet_segment, encryption_key).await;
-
-      return;
     }
     ClientLobbyIpcType::ReqEnterWorld => {
       // let lookup_id = u64::from_ne_bytes(packet_segment.data[0x18..(0x18 + 8)].try_into().unwrap());
-
-      return;
     }
     _ => {
       panic!("Unknown opcode!")

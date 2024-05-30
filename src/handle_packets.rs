@@ -21,8 +21,7 @@ extern "C" {
 
 pub fn generate_encryption_key(key: [u8; 4], phrase: &str) -> Digest {
   let size: usize = 0x2C;
-  let mut base_key: Vec<u8> = Vec::with_capacity(size);
-  base_key.resize(base_key.capacity(), 0);
+  let mut base_key: Vec<u8> = vec![0; size];
 
   base_key[0] = 0x78;
   base_key[1] = 0x56;
@@ -35,7 +34,7 @@ pub fn generate_encryption_key(key: [u8; 4], phrase: &str) -> Digest {
   // base_key[9] = 0x17;
 
   // TODO: Use game version finder (bruteforcer from xivmon)
-  let version = (6100 as u16).to_ne_bytes();
+  let version = 6100_u16.to_ne_bytes();
   base_key[8] = version[0];
   base_key[9] = version[1];
 
@@ -47,8 +46,7 @@ pub fn generate_encryption_key(key: [u8; 4], phrase: &str) -> Digest {
     panic!("generated key too large!");
   }
 
-  let foo = md5::compute(&base_key);
-  return foo;
+  md5::compute(&base_key)
 }
 
 pub const KEY_BYTES: u32 = 0x10;

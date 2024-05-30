@@ -7,15 +7,15 @@ use tokio::{io::AsyncWriteExt, net::TcpStream};
 
 use crate::structs::common::FFXIVARRPacketHeader;
 
-fn get_packet_size(segments: &Vec<Vec<u8>>) -> u32 {
+fn get_packet_size(segments: &[Vec<u8>]) -> u32 {
   let size = segments
     .iter()
     .fold(0usize, |acc, segment| acc + segment.len());
-  let complete_size = (size + mem::size_of::<FFXIVARRPacketHeader>())
-    .try_into()
-    .unwrap();
+  
 
-  complete_size
+  (size + mem::size_of::<FFXIVARRPacketHeader>())
+    .try_into()
+    .unwrap()
 }
 
 pub async fn send_packet(socket: &mut TcpStream, segments: Vec<Vec<u8>>) {

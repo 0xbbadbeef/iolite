@@ -80,7 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
           return;
         }
 
-        lobby(buf[..n].try_into().unwrap(), &database, &mut socket).await;
+        lobby(buf[..n].into(), &database, &mut socket).await;
       }
     });
   }
