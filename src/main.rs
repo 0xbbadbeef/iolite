@@ -5,12 +5,12 @@ pub mod packet_transfer;
 pub mod structs;
 
 use core::panic;
-use std::sync::Arc;
 use deku::DekuContainerRead;
 use std::collections::HashMap;
 use std::mem;
 use std::path::Path;
 use std::process::Command;
+use std::sync::Arc;
 use tokio::io::AsyncReadExt;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::Mutex;
@@ -53,7 +53,9 @@ fn exec_params(session_id: i32) -> [String; 11] {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
   println!("================Starting================");
 
-  Command::new(Path::new(r"G:\FFXIV\game\ffxiv_dx11"))
+  let game_path = env!("GAME_PATH");
+  println!("starting client at {}", game_path);
+  Command::new(Path::new(game_path))
     .args(exec_params(0))
     .spawn()
     .unwrap();

@@ -208,7 +208,7 @@ async fn get_char_list(
   packet_segment: FFXIVARRPacketSegmentRaw,
   encryption_key: &[u8],
 ) {
-  let sequence = u64::from_ne_bytes(packet_segment.data[0x10..0x10 + 8].try_into().unwrap());
+  let sequence = u64::from_le_bytes(packet_segment.data[0x10..0x10 + 8].try_into().unwrap());
 
   println!("seq: {}", sequence);
 
@@ -304,7 +304,7 @@ pub async fn handle_lobby_packet(
       get_char_list(socket, packet_segment, encryption_key).await;
     }
     ClientLobbyIpcType::ReqEnterWorld => {
-      // let lookup_id = u64::from_ne_bytes(packet_segment.data[0x18..(0x18 + 8)].try_into().unwrap());
+      // let lookup_id = u64::from_le_bytes(packet_segment.data[0x18..(0x18 + 8)].try_into().unwrap());
     }
     _ => {
       panic!("Unknown opcode!")

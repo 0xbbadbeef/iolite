@@ -34,7 +34,7 @@ pub fn generate_encryption_key(key: [u8; 4], phrase: &str) -> Digest {
   // base_key[9] = 0x17;
 
   // TODO: Use game version finder (bruteforcer from xivmon)
-  let version = 6100_u16.to_ne_bytes();
+  let version = 6100_u16.to_le_bytes();
   base_key[8] = version[0];
   base_key[9] = version[1];
 
@@ -98,7 +98,7 @@ pub async fn handle_packets(
         locked_db.insert("encryption_key".into(), new_encryption_key.to_vec());
 
         let data = unsafe {
-          let mut out_data = 0xE0003C2Au32.to_ne_bytes().to_vec();
+          let mut out_data = 0xE0003C2Au32.to_le_bytes().to_vec();
           out_data.resize(0x280, 0);
 
           let result = blowfish_encode(
