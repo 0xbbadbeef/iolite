@@ -1,6 +1,6 @@
 fn main() {
   cc::Build::new()
-    .file("blowfish/blowfish.cpp")
-    .file("blowfish/wrapper.cpp")
+    .file("src/blowfish/blowfish.cpp")
+    .file("src/blowfish/wrapper.cpp")
     .compile("FFXIVBlowfish")
 }
