@@ -2,14 +2,15 @@ use core::slice::{self};
 
 use deku::DekuContainerWrite;
 use md5::Digest;
-use tokio::net::TcpStream;
+use tokio::{io::WriteHalf, net::TcpStream};
 
 use crate::{
-  handle_lobby_packet::handle_lobby_packet,
-  packet_transfer::send_packet,
+  common::packet_transfer::{send_keep_alive, send_packet},
+  lobby::handle_lobby_packet::handle_lobby_packet,
   structs::common::{FFXIVARRPacketSegmentRaw, FFXIVARRSegmentHeader, FFXIVARRSegmentType},
-  Db,
 };
+
+use super::lobby_server::UnlockedDb;
 
 #[link(name = "FFXIVBlowfish")]
 extern "C" {
@@ -53,15 +54,17 @@ pub const KEY_BYTES: u32 = 0x10;
 
 pub async fn handle_packets(
   packets: Vec<FFXIVARRPacketSegmentRaw>,
-  db: &Db,
-  socket: &mut TcpStream,
+  db: &UnlockedDb,
+  socket: &mut WriteHalf<TcpStream>,
 ) {
-  for mut packet_segment in packets {
-    let mut locked_db = db.lock().await;
-    let encryption_key_bytes = locked_db.get("encryption_key");
+  let mut locked_db = db.lock().await;
+  let db_instance = locked_db.clone();
+  let empty_encryption_key = vec![0u8; 16];
+  let encryption_key = db_instance
+    .get("encryption_key")
+    .unwrap_or(&empty_encryption_key);
 
-    let empty_encryption_key = vec![0u8; 16];
-    let encryption_key = encryption_key_bytes.unwrap_or(&empty_encryption_key);
+  for mut packet_segment in packets {
     if !encryption_key.is_empty() && packet_segment.seg_hdr.segment_type != 9 {
       let size = u32::try_from(packet_segment.data.len()).unwrap();
       let data_received = unsafe {
@@ -125,29 +128,11 @@ pub async fn handle_packets(
       FFXIVARRSegmentType::IPC => {
         println!("Game packet");
 
-        handle_lobby_packet(socket, encryption_key, packet_segment).await;
+        handle_lobby_packet(socket, encryption_key, packet_segment, &mut locked_db).await;
         return;
       }
       FFXIVARRSegmentType::KeepAlive => {
-        println!("Keep alive packet");
-
-        let id = packet_segment.data[0..4].to_vec();
-        let time_stamp = packet_segment.data[4..4].to_vec();
-
-        let mut data = vec![];
-        data.extend(id);
-        data.extend(time_stamp);
-
-        let response_packet = FFXIVARRPacketSegmentRaw {
-          seg_hdr: FFXIVARRSegmentHeader {
-            size: 0x18,
-            segment_type: 0x08,
-            ..Default::default()
-          },
-          data,
-        };
-
-        send_packet(socket, vec![response_packet.to_bytes().unwrap()]).await;
+        send_keep_alive(socket, packet_segment).await;
         return;
       }
       _ => {

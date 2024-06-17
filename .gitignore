@@ -2,3 +2,5 @@ oo2net_9_win64.dll
 oo2net_9_win64.lib
 
 target
+start_game_script*
+!start_game_script.rs

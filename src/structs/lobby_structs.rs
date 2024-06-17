@@ -152,3 +152,20 @@ pub struct FFXIVIpcCharList {
   pub padding4: u32,
   // FFXIVCharDetails[2]
 }
+
+#[derive(Debug, PartialEq, DekuRead, DekuWrite, Default)]
+#[deku(endian = "little")]
+pub struct FFXIVIpcEnterWorld {
+  pub seq: u64,
+  pub char_id: u32,
+  pub padding: u32,
+  pub content_id: u64,
+  pub padding2: u32,
+  #[deku(count = "66")]
+  pub session_id: Vec<u8>,
+  pub port: u16,
+  #[deku(count = "48")]
+  pub host: Vec<u8>,
+  pub padding3: u64,
+  pub padding4: u64,
+}

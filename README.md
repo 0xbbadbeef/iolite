@@ -4,19 +4,20 @@ iolite is a [Final Fantasy XIV](https://www.finalfantasyxiv.com/) exploration to
 
 Iolite **is not** a private server, it never will be. This project is research project out of interest to see how production servers work and everything will not work. Iolite is not intended to emulate the game.
 
+**Note**: iolite is most definitely research code and is nowhere near optimised. It doesn't make sense, looks ugly and things will break each version update!
+
 ## Requirements
 
 - [rustlang](https://www.rust-lang.org/tools/install) >1.77.2
 - a C++ compiler available for your platform that can be picked up by "cc", see https://docs.rs/cc/1.0.98/cc/#compile-time-requirements
+- `oo2net_9_win64.dll` (optionally `oo2net_9_win64.lib`)
 - A legit copy of the game
 
 ### Supported game version: 6.58
 
 ## Configuration
 
-The configuration can be found in `/.cargo/config.toml`.
-
-Please edit the `GAME_PATH` to where iolite can find the `ffxiv_dx11` exe file, while excluding the `.exe`.
+Please edit the `GAME_PATH` in `start_game.rs` to where iolite can find the `ffxiv_dx11` exe file, while excluding the `.exe`.
 
 ## Building
 
@@ -30,16 +31,25 @@ cargo build
 cargo run
 ```
 
-If your `GAME_PATH` is configured correctly the game will open when the iolite server has started (this is planned to be a separate script soon).
+### Starting the game client with local server parameters
+
+This is helpful for running the game to auto connect to your local server.
+
+```shell
+cargo run-script start
+```
 
 ## What does it do currently?
 
-Currently Iolite only allows you to log into the lobby and see a mock character.
+Currently iolite allows you to
+ - View the lobby with a mock character and select a mock character (can't create a character or anything else)
+ - Log in to a world and fly around
 
-Things that are currently being worked on:
+To change the world, edit `ZONE_ID` in `src\world\handle_zone_packets.rs` and restart the server.
 
-- Ability to enter the world and walk around
-- GM commands
+Planned features
+ - GM Commands
+ - Change current world with a command
 
 Contributions are always welcome.
 

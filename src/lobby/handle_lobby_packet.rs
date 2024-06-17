@@ -1,40 +1,35 @@
 use core::slice::{self};
-use std::{
-  mem,
-  time::{SystemTime, UNIX_EPOCH},
-};
+use std::collections::HashMap;
 
 use deku::DekuContainerWrite;
 use serde_json::Value;
-use tokio::{
-  fs::{self},
-  net::TcpStream,
-};
+use tokio::{fs, io::WriteHalf, net::TcpStream, sync::MutexGuard};
 
 use crate::{
-  handle_packets::{blowfish_encode, KEY_BYTES},
-  packet_transfer::send_ipc_packet,
+  common::{
+    packet_transfer::{create_packet_segment, get_ipc_header, send_ipc_packet},
+    packets::IpcResponse,
+  },
   structs::{
-    common::{FFXIVARRPacketSegmentRaw, FFXIVARRSegmentHeader, CURRENT_EXPANSION_ID},
+    common::{FFXIVARRPacketSegmentRaw, CONTENT_ID, CURRENT_EXPANSION_ID},
     lobby_structs::{
-      ClientLobbyIpcType, FFXIVCharDetails, FFXIVIpcCharList, FFXIVIpcHeader, FFXIVIpcRetainerList,
-      FFXIVIpcServerList, FFXIVIpcServiceIdInfo, FFXIVServer, FFXIVServiceAccount,
-      ServerLobbyIpcType,
+      ClientLobbyIpcType, FFXIVCharDetails, FFXIVIpcCharList, FFXIVIpcEnterWorld,
+      FFXIVIpcRetainerList, FFXIVIpcServerList, FFXIVIpcServiceIdInfo, FFXIVServer,
+      FFXIVServiceAccount, ServerLobbyIpcType,
     },
   },
 };
 
+use super::handle_packets::{blowfish_encode, KEY_BYTES};
+
 const WORLD_ID: u16 = 21;
 const WORLD_NAME: &str = "WAGYU";
 
-struct LobbyResponse {
-  pub ipc_header: FFXIVIpcHeader,
-  pub segment: Vec<u8>,
-}
+const CHAR_ID: u32 = 0;
 
 fn create_lobby_packet_segments(
   encryption_key: &[u8],
-  lobby_responses: &[LobbyResponse],
+  lobby_responses: &[IpcResponse],
 ) -> Vec<Vec<u8>> {
   lobby_responses
     .iter()
@@ -52,42 +47,20 @@ fn create_lobby_packet_segments(
         slice::from_raw_parts(encoded, lobby_result.len()).to_vec()
       };
 
-      let seg_size: u32 = mem::size_of::<FFXIVARRSegmentHeader>().try_into().unwrap();
-      let lobby_size: u32 = lobby_response_encoded.len().try_into().unwrap();
-      let response_segment = FFXIVARRPacketSegmentRaw {
-        seg_hdr: FFXIVARRSegmentHeader {
-          size: seg_size + lobby_size,
-          segment_type: 3,
-          source_actor: 3758111786,
-          target_actor: 3758111786,
-          ..Default::default()
-        },
-        data: lobby_response_encoded,
-      };
+      let response_segment =
+        create_packet_segment(3, lobby_response_encoded, 0, 0);
 
       response_segment.to_bytes().unwrap()
     })
     .collect()
 }
 
-fn get_ipc_header(ipc_type: ServerLobbyIpcType) -> FFXIVIpcHeader {
-  FFXIVIpcHeader {
-    timestamp: SystemTime::now()
-      .duration_since(UNIX_EPOCH)
-      .expect("Time went backwards")
-      .as_secs()
+fn get_service_account_list() -> IpcResponse {
+  let ipc_header = get_ipc_header(
+    ServerLobbyIpcType::LobbyServiceAccountList
       .try_into()
       .unwrap(),
-    ipc_type: ipc_type.try_into().unwrap(),
-    ..Default::default()
-  }
-}
-
-fn get_service_account_list(packet_segment: FFXIVARRPacketSegmentRaw) -> LobbyResponse {
-  let session_id = packet_segment.data[0x22];
-  println!("session_id = {:?}", session_id);
-
-  let ipc_header = get_ipc_header(ServerLobbyIpcType::LobbyServiceAccountList);
+  );
 
   let mut name = "FINAL FANTASY XIV".as_bytes().to_vec();
   name.resize(0x44, 0);
@@ -118,14 +91,14 @@ fn get_service_account_list(packet_segment: FFXIVARRPacketSegmentRaw) -> LobbyRe
     );
   }
 
-  LobbyResponse {
+  IpcResponse {
     ipc_header,
     segment: appended_service_accounts,
   }
 }
 
-fn get_server_list() -> LobbyResponse {
-  let ipc_header = get_ipc_header(ServerLobbyIpcType::LobbyServerList);
+fn get_server_list() -> IpcResponse {
+  let ipc_header = get_ipc_header(ServerLobbyIpcType::LobbyServerList.try_into().unwrap());
 
   let mut server_list = FFXIVIpcServerList {
     seq: 1,
@@ -159,14 +132,14 @@ fn get_server_list() -> LobbyResponse {
     )
   }
 
-  LobbyResponse {
+  IpcResponse {
     ipc_header,
     segment: server_list,
   }
 }
 
-fn get_retainers() -> LobbyResponse {
-  let ipc_header = get_ipc_header(ServerLobbyIpcType::LobbyRetainerList);
+fn get_retainers() -> IpcResponse {
+  let ipc_header = get_ipc_header(ServerLobbyIpcType::LobbyRetainerList.try_into().unwrap());
 
   let mut empty_padding = vec![0; 0x210];
   empty_padding[8] = 1;
@@ -174,7 +147,7 @@ fn get_retainers() -> LobbyResponse {
     padding: empty_padding,
   };
 
-  LobbyResponse {
+  IpcResponse {
     ipc_header,
     segment: get_retainers.to_bytes().unwrap(),
   }
@@ -204,7 +177,7 @@ fn get_empty_char() -> Vec<u8> {
 }
 
 async fn get_char_list(
-  socket: &mut TcpStream,
+  socket: &mut WriteHalf<TcpStream>,
   packet_segment: FFXIVARRPacketSegmentRaw,
   encryption_key: &[u8],
 ) {
@@ -213,7 +186,7 @@ async fn get_char_list(
   println!("seq: {}", sequence);
 
   for counter in 0..4 {
-    let ipc_header = get_ipc_header(ServerLobbyIpcType::LobbyCharList);
+    let ipc_header = get_ipc_header(ServerLobbyIpcType::LobbyCharList.try_into().unwrap());
     let sized_unknown5 = vec![0u32; 7];
     let mut char_list = FFXIVIpcCharList {
       seq: sequence,
@@ -244,8 +217,8 @@ async fn get_char_list(
       let mut world_name = WORLD_NAME.as_bytes().to_vec();
       world_name.resize(32, 0);
       let char_details = FFXIVCharDetails {
-        unique_id: 0,
-        content_id: 11111111111111111,
+        unique_id: CHAR_ID,
+        content_id: CONTENT_ID,
         server_id: WORLD_ID,
         server_id1: WORLD_ID,
         index: 0,
@@ -267,7 +240,7 @@ async fn get_char_list(
 
     let segments = create_lobby_packet_segments(
       encryption_key,
-      &[LobbyResponse {
+      &[IpcResponse {
         ipc_header,
         segment: char_list_bytes,
       }],
@@ -277,20 +250,67 @@ async fn get_char_list(
   }
 }
 
-pub async fn handle_lobby_packet(
-  socket: &mut TcpStream,
+async fn enter_world(
+  socket: &mut WriteHalf<TcpStream>,
+  packet_segment: FFXIVARRPacketSegmentRaw,
+  encryption_key: &[u8],
+  session_id: u8,
+) {
+  let sequence = u64::from_le_bytes(packet_segment.data[0x10..0x10 + 8].try_into().unwrap());
+  let lookup_id = u64::from_le_bytes(packet_segment.data[0x18..(0x18 + 8)].try_into().unwrap());
+
+  println!("Entering world..");
+
+  let mut host = "127.0.0.1".as_bytes().to_vec();
+  host.resize(48, 0);
+  let port: u16 = 54995;
+
+  let sid = vec![session_id; 66];
+
+  let ipc_header = get_ipc_header(ServerLobbyIpcType::LobbyEnterWorld.try_into().unwrap());
+
+  let enter_world = FFXIVIpcEnterWorld {
+    content_id: lookup_id,
+    seq: sequence,
+    host,
+    port,
+    char_id: CHAR_ID,
+    session_id: sid,
+    ..Default::default()
+  }
+  .to_bytes()
+  .unwrap();
+
+  let segments = create_lobby_packet_segments(
+    encryption_key,
+    &[IpcResponse {
+      ipc_header,
+      segment: enter_world,
+    }],
+  );
+
+  send_ipc_packet(socket, segments).await;
+}
+
+pub async fn handle_lobby_packet<'a>(
+  socket: &mut WriteHalf<TcpStream>,
   encryption_key: &[u8],
   packet_segment: FFXIVARRPacketSegmentRaw,
+  locked_db: &mut MutexGuard<'_, HashMap<String, Vec<u8>>>,
 ) {
   let op_code = u16::from(packet_segment.data[2]);
   println!("Opcode: {}", op_code);
 
+  let session_id = locked_db.get("session_id").unwrap_or(&vec![0u8])[0];
+
   match op_code.try_into().unwrap() {
     ClientLobbyIpcType::ClientVersionInfo => {
-      let segments = create_lobby_packet_segments(
-        encryption_key,
-        &[get_service_account_list(packet_segment)],
-      );
+      let session_id = packet_segment.data[0x22];
+      println!("session_id = {:?}", session_id);
+
+      locked_db.insert("session_id".into(), vec![session_id]);
+
+      let segments = create_lobby_packet_segments(encryption_key, &[get_service_account_list()]);
       send_ipc_packet(socket, segments).await;
     }
     ClientLobbyIpcType::ReqCharList => {
@@ -304,7 +324,7 @@ pub async fn handle_lobby_packet(
       get_char_list(socket, packet_segment, encryption_key).await;
     }
     ClientLobbyIpcType::ReqEnterWorld => {
-      // let lookup_id = u64::from_le_bytes(packet_segment.data[0x18..(0x18 + 8)].try_into().unwrap());
+      enter_world(socket, packet_segment, encryption_key, session_id).await
     }
     _ => {
       panic!("Unknown opcode!")
