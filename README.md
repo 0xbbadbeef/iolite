@@ -17,7 +17,7 @@ Iolite **is not** a private server, it never will be. This project is research p
 
 ## Configuration
 
-Please edit the `GAME_PATH` in `start_game.rs` to where iolite can find the `ffxiv_dx11` exe file, while excluding the `.exe`.
+Please edit the `GAME_PATH` in `start_game_script.rs` to where iolite can find the `ffxiv_dx11` exe file, while excluding the `.exe`.
 
 ## Building
 
