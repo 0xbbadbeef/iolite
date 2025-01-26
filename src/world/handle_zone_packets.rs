@@ -19,7 +19,7 @@ use crate::{
   },
 };
 
-const ZONE_ID: u16 = 129;
+const ZONE_ID: u16 = 1255;
 
 fn create_zone_packet_segments(
   segments: Vec<IpcResponse>,
@@ -102,11 +102,11 @@ pub async fn process(
       player_name.resize(32, 0);
       let player_setup = FFXIVIpcPlayerSetup {
         content_id: CONTENT_ID,
-        char_id: player_info.id,
-        max_level: 90,
-        name: player_name,
-        expansion: 5,
-        levels: vec![90; CLASSJOB_SLOTS.into()].try_into().unwrap(),
+        // char_id: player_info.id,
+        // max_level: 90,
+        // name: player_name,
+        // expansion: 5,
+        levels: vec![100; CLASSJOB_SLOTS.into()].try_into().unwrap(),
         exp: vec![10000; CLASSJOB_SLOTS.into()].try_into().unwrap(),
         ..Default::default()
       };
@@ -162,9 +162,10 @@ pub async fn process(
       send_ipc_packet(socket, player_init_zone_packet).await;
     }
     ClientZoneIpcType::FinishLoadingHandler => {
+      println!("finish loading");
       let mut player_name = "Final Fantasy".as_bytes().to_vec();
       player_name.resize(32, 0);
-      let mut player_spawn = FFXIVIpcPlayerSpawn {
+      let player_spawn = FFXIVIpcPlayerSpawn {
         name: player_name.try_into().unwrap(),
         class_job: 35,
         current_world_id: 69,
@@ -178,30 +179,30 @@ pub async fn process(
         pose: 0,
         look: [0; 26],
         pos: FFXIVARRPosition {
-          x: -82.0,
-          y: 50.0,
-          z: 0.0,
+          x: 0.0,
+          y: 0.0,
+          z: 100.0,
         },
         rotation: 0,
         model_type: 0x01,
-        owner_id: 0xE0000000,
-        u22: 0xE0000000,
+        // owner_id: 0xE0000000,
+        // u22: 0xE0000000,
         spawn_index: 1,
         state: 1,
         // current_mount: 290,
         display_flags: 294912, // flight
         ..Default::default()
       };
-      player_spawn.models[0] = 1073008762;
-      player_spawn.models[1] = 1225130480;
-      player_spawn.models[2] = 1224802952;
-      player_spawn.models[3] = 1248591897;
-      player_spawn.models[4] = 205775;
-      player_spawn.models[5] = 65690;
-      player_spawn.models[6] = 65589;
-      player_spawn.models[7] = 65690;
-      player_spawn.models[8] = 65589;
-      player_spawn.models[9] = 65690;
+      // player_spawn.models[0] = 1073008762;
+      // player_spawn.models[1] = 1225130480;
+      // player_spawn.models[2] = 1224802952;
+      // player_spawn.models[3] = 1248591897;
+      // player_spawn.models[4] = 205775;
+      // player_spawn.models[5] = 65690;
+      // player_spawn.models[6] = 65589;
+      // player_spawn.models[7] = 65690;
+      // player_spawn.models[8] = 65589;
+      // player_spawn.models[9] = 65690;
       let player_spawn_packet = create_zone_packet_segments(
         vec![IpcResponse {
           ipc_header: get_ipc_header(ServerZoneIpcType::PlayerSpawn.into()),
@@ -331,7 +332,7 @@ pub async fn process(
       println!("fc handler");
     }
     _ => {
-      println!("[Warning]: unhandled opcode {:?}", opcode);
+      println!("[Warning]: unhandled opcode {:X}", opcode);
     }
   };
 }

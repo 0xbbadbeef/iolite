@@ -14,7 +14,7 @@ fn exec_params(session_id: i32) -> [String; 11] {
     "DEV.LobbyHost07=127.0.0.1 DEV.LobbyPort07=54994".to_string(),
     "DEV.LobbyHost08=127.0.0.1 DEV.LobbyPort08=54994".to_string(),
     "DEV.LobbyHost09=127.0.0.1 DEV.LobbyPort09=54994".to_string(),
-    "SYS.Region=3 language=1 version=1.0.0.0 DEV.MaxEntitledExpansionID=3 DEV.GMServerHost=127.0.0.1".to_string(),
+    "SYS.Region=3 language=1 version=1.0.0.0 DEV.MaxEntitledExpansionID=5 DEV.GMServerHost=127.0.0.1".to_string(),
   ]
 }
 

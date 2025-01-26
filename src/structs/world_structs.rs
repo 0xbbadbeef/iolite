@@ -281,6 +281,7 @@ pub struct FFXIVIpcPlayerSpawn {
   pub director_id: u32,
   pub owner_id: u32,
   pub u22: u32,
+  pub padding4: [u8; 16],
   pub hp_max: u32,
   pub hp_curr: u32,
   pub display_flags: u32,
@@ -315,16 +316,18 @@ pub struct FFXIVIpcPlayerSpawn {
   pub mount_color: u8,
   pub scale: u8,
   pub element_data: [u8; 6],
+  pub padding2: [u8; 12],
   #[deku(count = "30")]
   #[derivative(Default(value = "vec![StatusEffect::default(); 30]"))]
   pub effect: Vec<StatusEffect>,
   pub pos: FFXIVARRPosition,
   pub models: [u32; 10],
   pub unknown6_58: [u8; 10],
+  pub padding3: [u8; 7],
   pub name: [u8; 32],
   pub look: [u8; 26],
   pub fc_tag: [u8; 6],
-  pub padding: [u8; 6],
+  pub padding: [u8; 26],
 }
 
 #[derive(Debug, Clone, DekuRead, DekuWrite, Default)]

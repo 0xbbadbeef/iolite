@@ -10,10 +10,10 @@ Iolite **is not** a private server, it never will be. This project is research p
 
 - [rustlang](https://www.rust-lang.org/tools/install) >1.77.2
 - a C++ compiler available for your platform that can be picked up by "cc", see https://docs.rs/cc/1.0.98/cc/#compile-time-requirements
-- `oo2net_9_win64.dll` (optionally `oo2net_9_win64.lib`)
+- Oodle `oo2net_9_win64.dll` (optionally `oo2net_9_win64.lib`)
 - A legit copy of the game
 
-### Supported game version: 6.58
+### Supported game version: 7.16
 
 ## Configuration
 
