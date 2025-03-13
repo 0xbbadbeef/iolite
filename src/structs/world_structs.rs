@@ -316,7 +316,7 @@ pub struct FFXIVIpcPlayerSpawn {
   pub mount_color: u8,
   pub scale: u8,
   pub element_data: [u8; 6],
-  pub padding2: [u8; 12],
+  // pub padding2: [u8; 6],
   #[deku(count = "30")]
   #[derivative(Default(value = "vec![StatusEffect::default(); 30]"))]
   pub effect: Vec<StatusEffect>,
@@ -392,53 +392,6 @@ pub struct FFXIVIpcPing {
   pub time_in_milliseconds: u64,
   #[deku(count = "0x38")]
   pub unknown_8: Vec<u8>,
-}
-
-#[derive(Debug, Clone, DekuRead, DekuWrite, Default)]
-#[deku(
-  endian = "little",
-  ctx = "_endian: deku::ctx::Endian",
-  ctx_default = "deku::ctx::Endian::Little"
-)]
-pub struct PlayerEntry {
-  pub content_id: u64,
-  pub bytes: [u8; 12],
-  pub zone_id: u16,
-  pub zone_id1: u16,
-  pub bytes1: [u8; 8],
-  pub online_status_mask: u64,
-  pub class_job: u8,
-  pub padding: u8,
-  pub level: u8,
-  pub padding1: u8,
-  pub padding2: u16,
-  pub one: u8,
-  pub name: [u8; 20],
-  pub fc_tag: [u8; 9],
-}
-
-#[derive(Debug, DekuRead, DekuWrite, Default)]
-#[deku(endian = "little")]
-pub struct FFXIVIpcSocialList {
-  pub padding: u32,
-  pub padding1: u32,
-  pub padding2: u32,
-  pub request_type: u8,
-  pub sequence: u8,
-  pub padding3: u16,
-  #[deku(count = "10")]
-  pub entries: Vec<PlayerEntry>,
-}
-
-#[derive(Debug, DekuRead, DekuWrite, Default)]
-#[deku(endian = "little")]
-pub struct FFXIVIpcBlackList {
-  #[deku(count = "20")]
-  pub entry: Vec<[u8; 40]>,
-  pub padding: u8,
-  pub padding1: u8,
-  pub sequence: u16,
-  pub padding2: u32,
 }
 
 #[derive(Debug, DekuRead, DekuWrite, Default)]

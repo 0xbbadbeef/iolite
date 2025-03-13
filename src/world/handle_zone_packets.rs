@@ -7,19 +7,17 @@ use crate::{
     packets::IpcResponse,
   },
   structs::{
-    common::{
-      FFXIVARRPacketSegmentRaw, FFXIVARRPosition, CLASSJOB_SLOTS, CONTENT_ID,
-    },
+    common::{FFXIVARRPacketSegmentRaw, FFXIVARRPosition, CLASSJOB_SLOTS, CONTENT_ID},
     world_structs::{
-      FFXIVIpcActorControlSelf, FFXIVIpcBlackList, FFXIVIpcInit, FFXIVIpcInitZone, FFXIVIpcPing,
-      FFXIVIpcPingHandler, FFXIVIpcPlayerClassInfo, FFXIVIpcPlayerSetup, FFXIVIpcPlayerSpawn,
-      FFXIVIpcPlayerStats, FFXIVIpcSocialList, PlayerEntry, PlayerInfo,
+      FFXIVIpcActorControlSelf, FFXIVIpcInit, FFXIVIpcInitZone, FFXIVIpcPing, FFXIVIpcPingHandler,
+      FFXIVIpcPlayerClassInfo, FFXIVIpcPlayerSetup, FFXIVIpcPlayerSpawn, FFXIVIpcPlayerStats,
+      PlayerInfo,
     },
     zone_ipc_def::{ActorControlType, ClientZoneIpcType, ServerZoneIpcType},
   },
 };
 
-const ZONE_ID: u16 = 1255;
+const ZONE_ID: u16 = 129;
 
 fn create_zone_packet_segments(
   segments: Vec<IpcResponse>,
@@ -180,8 +178,8 @@ pub async fn process(
         look: [0; 26],
         pos: FFXIVARRPosition {
           x: 0.0,
-          y: 0.0,
-          z: 100.0,
+          y: 100.0,
+          z: 0.0,
         },
         rotation: 0,
         model_type: 0x01,
@@ -233,103 +231,6 @@ pub async fn process(
       );
 
       send_ipc_packet(socket, ping_packet).await;
-    }
-    ClientZoneIpcType::SocialListHandler => {
-      let request_type = packet.data[0x1A];
-      let count = packet.data[0x1B];
-      println!("social list handler type: {:?}", request_type);
-
-      match request_type {
-        1 => {
-          // party list
-          let mut name = "Final Fantasy".as_bytes().to_vec();
-          name.resize(20, 0);
-          let mut party_entries = vec![PlayerEntry {
-            class_job: 0,
-            content_id: CONTENT_ID,
-            level: 90,
-            zone_id: ZONE_ID,
-            zone_id1: 0x0100,
-            name: name.try_into().unwrap(),
-            online_status_mask: 0,
-            ..Default::default()
-          }];
-          party_entries[0].bytes[2] = 0;
-          party_entries[0].bytes[3] = 0x80;
-          party_entries[0].bytes[4] = 0x02;
-          party_entries[0].bytes[6] = 0x3B;
-          party_entries[0].bytes[11] = 0x10;
-
-          party_entries[0].bytes1[0] = 2; // gc icon
-          party_entries[0].bytes1[1] = 1; // language (1 = english)
-          party_entries[0].bytes1[2] = 2; // user settings language
-
-          party_entries.resize(10, PlayerEntry::default());
-          let party_list = FFXIVIpcSocialList {
-            request_type,
-            sequence: count,
-            entries: party_entries,
-            ..Default::default()
-          };
-          let party_list_packet = create_zone_packet_segments(
-            vec![IpcResponse {
-              ipc_header: get_ipc_header(ServerZoneIpcType::SocialList.into()),
-              segment: party_list.to_bytes().unwrap(),
-            }],
-            0,
-            player_info.id,
-          );
-
-          send_ipc_packet(socket, party_list_packet).await;
-        }
-        2 => {
-          // friend list
-          let mut friends_list_entries = vec![];
-          friends_list_entries.resize(10, PlayerEntry::default());
-          let friends_list = FFXIVIpcSocialList {
-            request_type,
-            sequence: count,
-            entries: friends_list_entries,
-            ..Default::default()
-          };
-          let friends_list_packet = create_zone_packet_segments(
-            vec![IpcResponse {
-              ipc_header: get_ipc_header(ServerZoneIpcType::SocialList.into()),
-              segment: friends_list.to_bytes().unwrap(),
-            }],
-            player_info.id,
-            player_info.id,
-          );
-
-          send_ipc_packet(socket, friends_list_packet).await;
-        }
-        _ => {
-          println!("unhandled social list")
-        }
-      }
-    }
-    ClientZoneIpcType::BlackListHandler => {
-      println!("blacklist");
-
-      let count = packet.data[0x11];
-      let blacklist = FFXIVIpcBlackList {
-        sequence: count.into(),
-        entry: vec![[0; 40]; 20],
-        ..Default::default()
-      };
-      let blacklist_packet = create_zone_packet_segments(
-        vec![IpcResponse {
-          ipc_header: get_ipc_header(ServerZoneIpcType::BlackList.into()),
-          segment: blacklist.to_bytes().unwrap(),
-        }],
-        player_info.id,
-        player_info.id,
-      );
-
-      send_ipc_packet(socket, blacklist_packet).await
-    }
-    ClientZoneIpcType::FcInfoReqHandler => {
-      println!("fc handler");
     }
     _ => {
       println!("[Warning]: unhandled opcode {:X}", opcode);
