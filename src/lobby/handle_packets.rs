@@ -35,7 +35,7 @@ pub fn generate_encryption_key(key: [u8; 4], phrase: &str) -> Digest {
   // base_key[9] = 0x17;
 
   // TODO: Use game version finder (bruteforcer from xivmon)
-  let version = 7000_u16.to_le_bytes();
+  let version = 7201_u16.to_le_bytes();
   base_key[8] = version[0];
   base_key[9] = version[1];
 
