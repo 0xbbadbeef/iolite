@@ -47,10 +47,6 @@ Currently iolite allows you to
 
 To change the world, edit `ZONE_ID` in `src\world\handle_zone_packets.rs` and restart the server.
 
-Planned features
- - GM Commands
- - Change current world with a command
-
 Contributions are always welcome.
 
 ## Credits
