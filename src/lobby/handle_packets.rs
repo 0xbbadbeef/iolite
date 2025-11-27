@@ -1,24 +1,15 @@
-use core::slice::{self};
-
 use deku::DekuContainerWrite;
 use md5::Digest;
 use tokio::{io::WriteHalf, net::TcpStream};
 
 use crate::{
+  blowfish::Blowfish,
   common::packet_transfer::{send_keep_alive, send_packet},
   lobby::handle_lobby_packet::handle_lobby_packet,
   structs::common::{FFXIVARRPacketSegmentRaw, FFXIVARRSegmentHeader, FFXIVARRSegmentType},
 };
 
 use super::lobby_server::UnlockedDb;
-
-#[link(name = "FFXIVBlowfish")]
-extern "C" {
-  pub fn blowfish_encode(key: *const u8, keybytes: u32, pInput: *const u8, lSize: u32)
-    -> *const u8;
-  pub fn blowfish_decode(key: *const u8, keybytes: u32, pInput: *const u8, lSize: u32)
-    -> *const u8;
-}
 
 pub fn generate_encryption_key(key: [u8; 4], phrase: &str) -> Digest {
   let size: usize = 0x2C;
@@ -50,8 +41,6 @@ pub fn generate_encryption_key(key: [u8; 4], phrase: &str) -> Digest {
   md5::compute(&base_key)
 }
 
-pub const KEY_BYTES: u32 = 0x10;
-
 pub async fn handle_packets(
   packets: Vec<FFXIVARRPacketSegmentRaw>,
   db: &UnlockedDb,
@@ -66,15 +55,8 @@ pub async fn handle_packets(
 
   for mut packet_segment in packets {
     if !encryption_key.is_empty() && packet_segment.seg_hdr.segment_type != 9 {
-      let size = u32::try_from(packet_segment.data.len()).unwrap();
-      let data_received = unsafe {
-        let test_move = packet_segment.data.clone();
-        let decryption_result =
-          blowfish_decode(encryption_key.as_ptr(), KEY_BYTES, test_move.as_ptr(), size);
-        slice::from_raw_parts(decryption_result, usize::try_from(size).unwrap()).to_vec()
-      };
-
-      packet_segment.data = data_received;
+      let blowfish = Blowfish::new(encryption_key);
+      blowfish.decrypt(&mut packet_segment.data);
     }
 
     println!("seg_hdr: {:?}", packet_segment.seg_hdr.segment_type);
@@ -100,18 +82,11 @@ pub async fn handle_packets(
         let new_encryption_key: [u8; 16] = generate_encryption_key(key, phrase).0;
         locked_db.insert("encryption_key".into(), new_encryption_key.to_vec());
 
-        let data = unsafe {
-          let mut out_data = 0xE0003C2Au32.to_le_bytes().to_vec();
-          out_data.resize(0x280, 0);
+        let mut data = 0xE0003C2Au32.to_le_bytes().to_vec();
+        data.resize(0x280, 0);
 
-          let result = blowfish_encode(
-            new_encryption_key.as_ptr(),
-            KEY_BYTES,
-            out_data.as_ptr(),
-            0x280,
-          );
-          slice::from_raw_parts(result, 0x280).to_vec()
-        };
+        let blowfish = Blowfish::new(&new_encryption_key);
+        blowfish.encrypt(&mut data);
 
         let response_packet = FFXIVARRPacketSegmentRaw {
           seg_hdr: FFXIVARRSegmentHeader {

@@ -1,3 +1,4 @@
+pub mod blowfish;
 pub mod common;
 pub mod lobby;
 pub mod structs;

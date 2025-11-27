@@ -67,8 +67,7 @@ pub async fn handle_world_packets(
         }
       }
       FFXIVARRSegmentType::IPC => {
-        handle_zone_packets::process(write_socket, packet_segment, player_info)
-          .await;
+        handle_zone_packets::process(write_socket, packet_segment, player_info).await;
       }
       FFXIVARRSegmentType::KeepAlive => {
         println!("world keep alive");
