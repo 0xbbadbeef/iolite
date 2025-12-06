@@ -7,7 +7,7 @@ use crate::{
     packets::IpcResponse,
   },
   structs::{
-    common::{FFXIVARRPacketSegmentRaw, FFXIVARRPosition, CLASSJOB_SLOTS, CONTENT_ID},
+    common::{CLASSJOB_SLOTS, CONTENT_ID, FFXIVARRPacketSegmentRaw, FFXIVARRPosition},
     world_structs::{
       FFXIVIpcActorControlSelf, FFXIVIpcInit, FFXIVIpcInitZone, FFXIVIpcPing, FFXIVIpcPingHandler,
       FFXIVIpcPlayerClassInfo, FFXIVIpcPlayerSetup, FFXIVIpcPlayerSpawn, FFXIVIpcPlayerStats,

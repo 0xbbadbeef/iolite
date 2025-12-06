@@ -11,7 +11,7 @@ use crate::{
     packets::IpcResponse,
   },
   structs::{
-    common::{FFXIVARRPacketSegmentRaw, CONTENT_ID, CURRENT_EXPANSION_ID},
+    common::{CONTENT_ID, CURRENT_EXPANSION_ID, FFXIVARRPacketSegmentRaw},
     lobby_structs::{
       ClientLobbyIpcType, FFXIVCharDetails, FFXIVIpcCharList, FFXIVIpcEnterWorld,
       FFXIVIpcRetainerList, FFXIVIpcServerList, FFXIVIpcServiceIdInfo, FFXIVServer,
