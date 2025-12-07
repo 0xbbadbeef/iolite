@@ -1,4 +1,3 @@
-use core::slice::{self};
 use std::collections::HashMap;
 
 use deku::DekuContainerWrite;
@@ -6,12 +5,13 @@ use serde_json::Value;
 use tokio::{fs, io::WriteHalf, net::TcpStream, sync::MutexGuard};
 
 use crate::{
+  blowfish::Blowfish,
   common::{
     packet_transfer::{create_packet_segment, get_ipc_header, send_ipc_packet},
     packets::IpcResponse,
   },
   structs::{
-    common::{FFXIVARRPacketSegmentRaw, CONTENT_ID, CURRENT_EXPANSION_ID},
+    common::{CONTENT_ID, CURRENT_EXPANSION_ID, FFXIVARRPacketSegmentRaw},
     lobby_structs::{
       ClientLobbyIpcType, FFXIVCharDetails, FFXIVIpcCharList, FFXIVIpcEnterWorld,
       FFXIVIpcRetainerList, FFXIVIpcServerList, FFXIVIpcServiceIdInfo, FFXIVServer,
@@ -19,8 +19,6 @@ use crate::{
     },
   },
 };
-
-use super::handle_packets::{blowfish_encode, KEY_BYTES};
 
 const WORLD_ID: u16 = 21;
 const WORLD_NAME: &str = "WAGYU";
@@ -36,19 +34,10 @@ fn create_lobby_packet_segments(
     .map(|lobby_response| {
       let mut lobby_result = lobby_response.ipc_header.to_bytes().unwrap();
       lobby_result.extend(lobby_response.segment.clone());
-      let lobby_response_encoded = unsafe {
-        let encoded = blowfish_encode(
-          encryption_key.as_ptr(),
-          KEY_BYTES,
-          lobby_result.as_ptr(),
-          lobby_result.len().try_into().unwrap(),
-        );
+      let blowfish = Blowfish::new(encryption_key);
+      blowfish.encrypt(&mut lobby_result);
 
-        slice::from_raw_parts(encoded, lobby_result.len()).to_vec()
-      };
-
-      let response_segment =
-        create_packet_segment(3, lobby_response_encoded, 0, 0);
+      let response_segment = create_packet_segment(3, lobby_result, 0, 0);
 
       response_segment.to_bytes().unwrap()
     })

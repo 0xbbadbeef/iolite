@@ -3,7 +3,10 @@ use std::{
   mem,
   time::{SystemTime, UNIX_EPOCH},
 };
-use tokio::{io::{AsyncWriteExt, WriteHalf}, net::TcpStream};
+use tokio::{
+  io::{AsyncWriteExt, WriteHalf},
+  net::TcpStream,
+};
 
 use crate::structs::{
   common::{FFXIVARRPacketHeader, FFXIVARRPacketSegmentRaw, FFXIVARRSegmentHeader},
@@ -97,7 +100,10 @@ pub fn create_packet_segment(
   FFXIVARRPacketSegmentRaw { seg_hdr, data }
 }
 
-pub async fn send_keep_alive(socket: &mut WriteHalf<TcpStream>, packet_segment: FFXIVARRPacketSegmentRaw) {
+pub async fn send_keep_alive(
+  socket: &mut WriteHalf<TcpStream>,
+  packet_segment: FFXIVARRPacketSegmentRaw,
+) {
   let id = packet_segment.data[0..4].to_vec();
   let time_stamp = packet_segment.data[4..4].to_vec();
 

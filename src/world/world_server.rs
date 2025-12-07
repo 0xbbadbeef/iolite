@@ -21,7 +21,7 @@ fn get_packet_header(buf: &[u8]) -> FFXIVARRPacketHeader {
     panic!("Header too small! Malformed request?");
   }
 
-  let (_rest, header) = FFXIVARRPacketHeader::from_bytes((&buf, 0)).unwrap();
+  let (_rest, header) = FFXIVARRPacketHeader::from_bytes((buf, 0)).unwrap();
 
   header
 }
