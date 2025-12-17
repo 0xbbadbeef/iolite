@@ -54,7 +54,7 @@ pub async fn process_packets(
   // match header
   let mut buffer = decomp_buffer.to_vec();
 
-  match unsafe { mem::transmute(header.compression_type) } {
+  match unsafe { mem::transmute::<u8, CompressionType>(header.compression_type) } {
     CompressionType::NoCompression => {}
     CompressionType::Oodle => {
       let result = oodle
