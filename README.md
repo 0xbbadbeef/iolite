@@ -13,7 +13,7 @@ Iolite **is not** a private server, it never will be. This project is research p
 - Oodle `oo2net_9_win64.dll` (optionally `oo2net_9_win64.lib`)
 - A legit copy of the game
 
-### Supported game version: 7.40
+### Supported game version: 7.40h1
 
 ## Configuration
 
