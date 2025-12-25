@@ -3,25 +3,25 @@ use num_enum::{IntoPrimitive, TryFromPrimitive};
 #[derive(Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
 #[repr(u16)]
 pub enum ServerZoneIpcType {
-  Ping = 0x30d,     // 7.40h1
-  Init = 0x278,     // 7.40h1
-  InitZone = 0x12e, // 7.40h1
+  Ping = 0x1a0,     // 7.40h2
+  Init = 0x250,     // 7.40h2
+  InitZone = 0x242, // 7.40h2
 
-  PlayerStats = 0x2bf,     // 7.40h1
-  PlayerSetup = 0x36f,     // 7.40h1
-  PlayerClassInfo = 0x379, // 7.40h1
-  PlayerSpawn = 0x18b,     // 7.40h1
+  PlayerStats = 0x1e1,     // 7.40h2
+  PlayerSetup = 0x256,     // 7.40h2
+  PlayerClassInfo = 0x0a0, // 7.40h2
+  PlayerSpawn = 0x0ca,     // 7.40h2
 
-  ActorControlSelf = 0x38a, // 7.40h1
+  ActorControlSelf = 0x347, // 7.40h2
 }
 
 #[derive(Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
 #[repr(u16)]
 pub enum ClientZoneIpcType {
   None,
-  PingHandler = 0x2d6,          // 7.40h1
-  InitHandler = 0x164,          // 7.40h1
-  FinishLoadingHandler = 0x0c9, // 7.40h1
+  PingHandler = 0x142,          // 7.40h2
+  InitHandler = 0x312,          // 7.40h2
+  FinishLoadingHandler = 0x324, // 7.40h2
 }
 
 #[derive(Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
