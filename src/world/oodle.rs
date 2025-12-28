@@ -3,7 +3,7 @@ use std::ptr::null;
 use libc::{c_void, intptr_t};
 
 #[link(name = "oo2net_9_win64")]
-extern "C" {
+unsafe extern "C" {
   pub fn OodleNetwork1TCP_State_Size() -> intptr_t;
   pub fn OodleNetwork1_Shared_Size(htbits: i32) -> intptr_t;
   pub fn OodleNetwork1_Shared_SetWindow(

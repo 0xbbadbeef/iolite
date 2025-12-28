@@ -281,7 +281,7 @@ async fn enter_world(
   send_ipc_packet(socket, segments).await;
 }
 
-pub async fn handle_lobby_packet<'a>(
+pub async fn handle_lobby_packet(
   socket: &mut WriteHalf<TcpStream>,
   encryption_key: &[u8],
   packet_segment: FFXIVARRPacketSegmentRaw,

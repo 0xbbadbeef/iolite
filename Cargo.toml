@@ -1,19 +1,19 @@
 [package]
 name = "iolite"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 binary-layout = "4.0.2"
-bytes = "1.6.0"
-deku = "0.16.0"
+bytes = "1.11.0"
+deku = "0.20.0"
 derivative = "2.2.0"
-libc = "0.2.153"
-md5 = "0.7.0"
-num_enum = "0.7.2"
-serde_json = "1.0.117"
+libc = "0.2.178"
+md5 = "0.8.0"
+num_enum = "0.7.5"
+serde_json = "1.0.145"
 tokio = { version = "1.37.0", features = ["full"] }
 
 [dev-dependencies.cargo-husky]

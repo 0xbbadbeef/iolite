@@ -16,7 +16,7 @@ pub enum ServerLobbyIpcType {
 impl TryInto<u16> for ServerLobbyIpcType {
   type Error = ();
   fn try_into(self) -> Result<u16, Self::Error> {
-    Ok(unsafe { transmute(self) })
+    Ok(unsafe { transmute::<ServerLobbyIpcType, u16>(self) })
   }
 }
 
