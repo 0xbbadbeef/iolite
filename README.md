@@ -6,10 +6,11 @@ Iolite **is not** a private server, it never will be. This project is research p
 
 **Note**: iolite is most definitely research code and is nowhere near optimised. It doesn't make sense, looks ugly and things will break each version update!
 
+**Maintenance mode**: Contributions are welcome however this project is not currently under active development.
+
 ## Requirements
 
 - [rustlang](https://www.rust-lang.org/tools/install) >1.77.2
-- a C++ compiler available for your platform that can be picked up by "cc", see https://docs.rs/cc/1.0.98/cc/#compile-time-requirements
 - Oodle `oo2net_9_win64.dll` (optionally `oo2net_9_win64.lib`)
 - A legit copy of the game
 
@@ -46,8 +47,6 @@ Currently iolite allows you to
  - Log in to a world and fly around
 
 To change the world, edit `ZONE_ID` in `src\world\handle_zone_packets.rs` and restart the server.
-
-Contributions are always welcome.
 
 ## Credits
 
